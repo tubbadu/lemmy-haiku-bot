@@ -8,9 +8,9 @@ function ifSubscribed(community_id, callbackSuccess, callbackFail) {
 		}
 
 		if (row) {
-			callbackSuccess(community_id); // Value exists
+			if(callbackSuccess) callbackSuccess(community_id); // Value exists
 		} else {
-			callbackFail(community_id)
+			if(callbackFail) callbackFail(community_id)
 		}
 	});
 }
@@ -27,32 +27,32 @@ function subscribe(community_id, callbackSuccess, callbackFail) {
 
 		if (this.changes > 0) {
 			console.log(`Value ${community_id} inserted into the database.`);
-			callbackSuccess(community_id);
+			if(callbackSuccess) callbackSuccess(community_id);
 		} else {
 			console.log(`Value ${community_id} already exists in the database.`);
-			callbackFail(community_id);
+			if(callbackFail) callbackFail(community_id);
 		}
 	});
 }
 
 function unsubscribe(community_id, callbackSuccess, callbackFail) {
-  const query = `DELETE FROM subscribed
-    WHERE community_id = ?`;
+const query = `DELETE FROM subscribed
+	WHERE community_id = ?`;
 
-  db.run(query, community_id, function (err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
+db.run(query, community_id, function (err) {
+	if (err) {
+	console.error(err);
+	return;
+	}
 
-    if (this.changes > 0) {
-      console.log(`Value ${community_id} removed from the database.`);
-	  callbackSuccess(community_id);
-    } else {
-      console.log(`Value ${community_id} is not present in the database.`);
-	  callbackFail(community_id);
-    }
-  });
+	if (this.changes > 0) {
+	console.log(`Value ${community_id} removed from the database.`);
+	if(callbackSuccess) callbackSuccess(community_id);
+	} else {
+	console.log(`Value ${community_id} is not present in the database.`);
+	if(callbackFail) callbackFail(community_id);
+	}
+});
 }
 
 function db_init(){

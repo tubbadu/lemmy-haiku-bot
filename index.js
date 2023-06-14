@@ -7,7 +7,6 @@ const LEMMY_PASSWORD = process.env.LEMMY_PASSWORD;
 const LEMMY_INSTANCE = process.env.LEMMY_INSTANCE;
 const LEMMY_USERID = 37535;
 
-var subscribed = []
 const appendix = "\n\n--------------\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~" // ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~
 //"~I'm a bot beep boop. I detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.one/u/tubbadu) and tell him he's an idiot. Answer `REMOVE` to this comment and I will delete it imediately.~".replaceAll(" ", "~ ~");
 
@@ -22,14 +21,14 @@ const bot = new LemmyBot.LemmyBot({
 	dbFile: 'db.sqlite3',
 	handlers: {
 		post: (res) => {
-			//console.log("post>" + res.postView.post.name);
-			//console.warn(res)
+			
 		},
 		comment: (res) => {
-			const x = res.commentView.community.actor_id
-			const y = res.commentView.creator.name
-			console.log(x, y)
-			res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), console.warn);
+			if(res.commentView.creator.id != LEMMY_USERID){
+				res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), console.warn);
+			} else {
+				console.log("not replying to my own comment because I'm not stupid eheh")
+			}
 		},
 		mention: (res) => onMention(res)
 	}
@@ -42,7 +41,6 @@ function checkForHaikus(res){
 	if(!haiku){
 		return;
 	}
-	console.log("is haiku")
 	const community_id = res.commentView.community.id
 	const community_name = res.commentView.community.name;
 	const postId = res.commentView.comment.post_id;
@@ -58,11 +56,12 @@ function checkForHaikus(res){
 		
 		console.log(quoteFormat(haiku));
 		res.botActions.createComment(newcomment);
+		res.preventReprocess();
 	})
 
 }
 
-function checkOpt(text, community_id){
+function checkOpt(res, text, postId, parentId, community_id){
 	if(text.includes("opt in") && !text.includes("opt out")){
 		// opt in
 		console.log("opt in")
@@ -74,6 +73,7 @@ function checkOpt(text, community_id){
 				parentId: parentId,
 				content: answer + appendix
 			})
+			res.preventReprocess();
 		}, (community_id) => {
 			// fail
 			let answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
@@ -82,6 +82,7 @@ function checkOpt(text, community_id){
 				parentId: parentId,
 				content: answer + appendix
 			})
+			res.preventReprocess();
 		})
 	} else if (!text.includes("opt in") && text.includes("opt out")){
 		// opt out
@@ -94,6 +95,7 @@ function checkOpt(text, community_id){
 				parentId: parentId,
 				content: answer + appendix
 			})
+			res.preventReprocess();
 		}, (community_id) => {
 			// fail
 			let answer = "*Haiku-bot* is currently not watching this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
@@ -102,6 +104,7 @@ function checkOpt(text, community_id){
 				parentId: parentId,
 				content: answer + appendix
 			})
+			res.preventReprocess();
 		})
 	} else {
 		// misunderstand
@@ -112,6 +115,7 @@ function checkOpt(text, community_id){
 			parentId: parentId,
 			content: answer + appendix
 		})
+		res.preventReprocess();
 	}
 }
 
@@ -141,19 +145,13 @@ function onMention(res){
 	const postId = res.mentionView.comment.post_id;
 	const parentId = res.mentionView.comment.id;
 	
-	let answer = checkOpt(text, community_id);
-	
-	res.botActions.createComment({
-		postId: postId,
-		parentId: parentId,
-		content: answer + appendix
-	})
+	checkOpt(res, text, postId, parentId, community_id);
 	console.log("mentioned by", res.mentionView.post.community_id)
 }
 
 
 function onAnswer(res, originalComment){
-	console.log("answer!")
+	
 	const community_id = res.commentView.community.id;
 	const community_name = res.commentView.community.name;
 	const text = res.commentView.comment.content.toLowerCase();
@@ -162,25 +160,23 @@ function onAnswer(res, originalComment){
 	const parentId = originalComment.comment.id;
 	const userId = res.commentView.creator.id;
 	const userName = res.commentView.creator.name;
-
+	
 	if(text.includes("remove")){
 		const rm = {
 			reason: "Requested by user " + userName,
 			removed: true,
 			comment_id: parentId
 		}
-		console.log("removing post", originalComment.comment.content)
-		res.botActions.removeComment(rm)
-	}else {
-		let answer = checkOpt(text, community_id);
-		console.warn("answer =", answer)
-		res.botActions.createComment({
-			postId: postId,
-			parentId: parentId,
-			content: answer + appendix
-		})
+		console.log("removing post", parentId, "because of \"" + text + "\"")
+		res.botActions.removeComment(rm);
+		res.preventReprocess();
+	} else {
+		checkOpt(res, text, postId, parentId, community_id);
 	}
 }
+
+
+
 
 bot.start()
 
