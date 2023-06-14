@@ -1,0 +1,16 @@
+{
+  "name": "haiku-detector-bot",
+  "version": "1.0.0",
+  "description": "a bot to detect haikus and format them nicely",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tubbadu",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "dependencies": {
+    "lemmy-bot": "^0.3.9",
+    "syllable": "^5.0.1"
+  }
+}
