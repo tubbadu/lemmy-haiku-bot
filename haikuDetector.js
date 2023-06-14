@@ -49,19 +49,24 @@ function makeHaiku(str){
 			} else if(line == 3){
 				if(syllableCount == 5){
 					// third line finished
-					return formattedHaiku.trim();
+					line++;
+					syllableCount = 0;
 				} else if(syllableCount > 5){
 					// not an haiku
 					return;
 				} else {
 					// go on
 				}
+			} else {
+				// too much lines
+				return;
 			}
 		} else {
 			// empty word, just jump it
 		}
 	}
-	return;
+	if(formattedHaiku.trim().length > 0)
+		return formattedHaiku.trim();
 }
 
 export default makeHaiku
