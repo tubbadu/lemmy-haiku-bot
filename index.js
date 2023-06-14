@@ -45,23 +45,23 @@ function checkForHaikus(res){
 	const community_name = res.commentView.community.name;
 	const postId = res.commentView.comment.post_id;
 	const parentId = res.commentView.comment.id;
+	const author = res.commentView.creator.name
 	
 	Db.ifSubscribed(community_id, (community_id) => {
 		console.log("detected haiku in subscribed", community_id);
 		const newcomment = {
 			postId: postId,
 			parentId: parentId,
-			content: quoteFormat(haiku) + appendix
+			content: quoteFormat(haiku, author) + appendix
 		}
 		
-		console.log(quoteFormat(haiku));
 		res.botActions.createComment(newcomment);
 		res.preventReprocess();
 	})
 
 }
 
-function checkOpt(res, text, postId, parentId, community_id){
+function checkOpt(res, text, postId, commentId, community_id){
 	if(text.includes("opt in") && !text.includes("opt out")){
 		// opt in
 		console.log("opt in")
@@ -70,7 +70,7 @@ function checkOpt(res, text, postId, parentId, community_id){
 			let answer = "*Haiku-bot* has been successfully added to this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
 			res.botActions.createComment({
 				postId: postId,
-				parentId: parentId,
+				parentId: commentId,
 				content: answer + appendix
 			})
 			res.preventReprocess();
@@ -79,7 +79,7 @@ function checkOpt(res, text, postId, parentId, community_id){
 			let answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
 			res.botActions.createComment({
 				postId: postId,
-				parentId: parentId,
+				parentId: commentId,
 				content: answer + appendix
 			})
 			res.preventReprocess();
@@ -92,7 +92,7 @@ function checkOpt(res, text, postId, parentId, community_id){
 			let answer = "*Haiku-bot* has been removed from this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
 			res.botActions.createComment({
 				postId: postId,
-				parentId: parentId,
+				parentId: commentId,
 				content: answer + appendix
 			})
 			res.preventReprocess();
@@ -101,7 +101,7 @@ function checkOpt(res, text, postId, parentId, community_id){
 			let answer = "*Haiku-bot* is currently not watching this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
 			res.botActions.createComment({
 				postId: postId,
-				parentId: parentId,
+				parentId: commentId,
 				content: answer + appendix
 			})
 			res.preventReprocess();
@@ -112,19 +112,20 @@ function checkOpt(res, text, postId, parentId, community_id){
 		let answer = "Hello fellow Lemmings! I'm the *Haiku-bot*. I detect Haikus and format them in a nice way.\nAdd me in a community by mentioning me and writing `OPT IN`, or remove me from a community writing `OPT OUT`.";
 		res.botActions.createComment({
 			postId: postId,
-			parentId: parentId,
+			parentId: commentId,
 			content: answer + appendix
 		})
 		res.preventReprocess();
 	}
 }
 
-function quoteFormat(str){
+function quoteFormat(str, author){
 	let ret = ""
 	const lines = str.split("\n");
 	lines.forEach(line => {
-		ret += "> " + line + "\n> \n";
+		ret += "> *" + line.trim() + "*\n> \n";
 	})
+	ret += ">  ~---~ ~" + author + "~"
 	return ret.trim();
 }
 
@@ -143,9 +144,9 @@ function onMention(res){
 	const community_name = res.mentionView.community.name;
 	const text = res.mentionView.comment.content.toLowerCase();
 	const postId = res.mentionView.comment.post_id;
-	const parentId = res.mentionView.comment.id;
+	const commentId = res.mentionView.comment.id;
 	
-	checkOpt(res, text, postId, parentId, community_id);
+	checkOpt(res, text, postId, commentId, community_id);
 	console.log("mentioned by", res.mentionView.post.community_id)
 }
 
@@ -171,7 +172,7 @@ function onAnswer(res, originalComment){
 		res.botActions.removeComment(rm);
 		res.preventReprocess();
 	} else {
-		checkOpt(res, text, postId, parentId, community_id);
+		checkOpt(res, text, postId, commentId, community_id);
 	}
 }
 
