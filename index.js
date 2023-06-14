@@ -11,8 +11,8 @@ const bot = new LemmyBot.LemmyBot({
 		username: LEMMY_USERNAME,
 		password: LEMMY_PASSWORD
 	},
-	federation: "all",
 	instance: LEMMY_INSTANCE,
+	federation: "all",
 	dbFile: 'db.sqlite3',
 	handler: {
 		comment: {
@@ -26,13 +26,8 @@ const bot = new LemmyBot.LemmyBot({
 			}
 		},
 		post: {
-			handle: ({
-				postView: {
-					post: {creator_id}
-				},
-			botActions: {}
-			}) => {
-				console.warn("new post", creator_id)
+			handle: (x) => {
+				console.warn("new post", x)
 			}
 		}
 	}
