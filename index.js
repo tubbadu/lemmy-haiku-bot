@@ -1,4 +1,5 @@
 import makeHaiku from './haikuDetector.js';
+import Db from "./db.js"
 import LemmyBot from 'lemmy-bot';
 
 const LEMMY_USERNAME = process.env.LEMMY_USERNAME;
@@ -6,8 +7,8 @@ const LEMMY_PASSWORD = process.env.LEMMY_PASSWORD;
 const LEMMY_INSTANCE = process.env.LEMMY_INSTANCE;
 const LEMMY_USERID = 37535;
 
-var subscribed = [] // 50 = memes
-const appendix = "\n\n--------------\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~ ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~"
+var subscribed = []
+const appendix = "\n\n--------------\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~" // ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~
 //"~I'm a bot beep boop. I detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.one/u/tubbadu) and tell him he's an idiot. Answer `REMOVE` to this comment and I will delete it imediately.~".replaceAll(" ", "~ ~");
 
 const bot = new LemmyBot.LemmyBot({
@@ -39,7 +40,7 @@ function checkForHaikus(res){
 	const text = res.commentView.comment.content;
 	const haiku = makeHaiku(text);
 	if(!haiku){
-		return false;
+		return;
 	}
 	console.log("is haiku")
 	const community_id = res.commentView.community.id
@@ -47,7 +48,7 @@ function checkForHaikus(res){
 	const postId = res.commentView.comment.post_id;
 	const parentId = res.commentView.comment.id;
 	
-	if(subscribed.includes(community_id)){
+	Db.ifSubscribed(community_id, (community_id) => {
 		console.log("detected haiku in subscribed", community_id);
 		const newcomment = {
 			postId: postId,
@@ -57,40 +58,61 @@ function checkForHaikus(res){
 		
 		console.log(quoteFormat(haiku));
 		res.botActions.createComment(newcomment);
-		return true;
-	}
-	return false;
+	})
+
 }
 
 function checkOpt(text, community_id){
-	let answer = "";
 	if(text.includes("opt in") && !text.includes("opt out")){
 		// opt in
 		console.log("opt in")
-		if(subscribed.includes(community_id)){
-			answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
-		} else {
-			subscribed.push(community_id);
-			answer = "*Haiku-bot* has been successfully added to this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
-		}
+		Db.subscribe(community_id, (community_id) => {
+			// success
+			let answer = "*Haiku-bot* has been successfully added to this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
+			res.botActions.createComment({
+				postId: postId,
+				parentId: parentId,
+				content: answer + appendix
+			})
+		}, (community_id) => {
+			// fail
+			let answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
+			res.botActions.createComment({
+				postId: postId,
+				parentId: parentId,
+				content: answer + appendix
+			})
+		})
 	} else if (!text.includes("opt in") && text.includes("opt out")){
 		// opt out
 		console.log("opt out")
-		if(subscribed.includes(community_id)){
-			let index = subscribed.indexOf(community_id);
-			if (index !== -1) {
-				subscribed.splice(index, 1);
-			}
-			answer = "*Haiku-bot* has been removed from this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
-		} else {
-			answer = "*Haiku-bot* is currently not watching this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
-		}
+		Db.unsubscribe(community_id, (community_id) => {
+			// success
+			let answer = "*Haiku-bot* has been removed from this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
+			res.botActions.createComment({
+				postId: postId,
+				parentId: parentId,
+				content: answer + appendix
+			})
+		}, (community_id) => {
+			// fail
+			let answer = "*Haiku-bot* is currently not watching this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
+			res.botActions.createComment({
+				postId: postId,
+				parentId: parentId,
+				content: answer + appendix
+			})
+		})
 	} else {
 		// misunderstand
 		console.log("general mention")
-		answer = "Hello fellow Lemmings! I'm the *Haiku-bot*. I detect Haikus and format them in a nice way.\nAdd me in a community by mentioning me and writing `OPT IN`, or remove me from a community writing `OPT OUT`.";
+		let answer = "Hello fellow Lemmings! I'm the *Haiku-bot*. I detect Haikus and format them in a nice way.\nAdd me in a community by mentioning me and writing `OPT IN`, or remove me from a community writing `OPT OUT`.";
+		res.botActions.createComment({
+			postId: postId,
+			parentId: parentId,
+			content: answer + appendix
+		})
 	}
-	return answer;
 }
 
 function quoteFormat(str){
