@@ -6,8 +6,8 @@ const LEMMY_PASSWORD = process.env.LEMMY_PASSWORD;
 const LEMMY_INSTANCE = process.env.LEMMY_INSTANCE;
 const LEMMY_USERID = 37535;
 
-var subscribed = []
-const appendix = "\n\n--------------+\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~ ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~"
+var subscribed = [50] // 50 = memes
+const appendix = "\n\n--------------\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~ ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~"
 //"~I'm a bot beep boop. I detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.one/u/tubbadu) and tell him he's an idiot. Answer `REMOVE` to this comment and I will delete it imediately.~".replaceAll(" ", "~ ~");
 
 const bot = new LemmyBot.LemmyBot({
@@ -25,8 +25,9 @@ const bot = new LemmyBot.LemmyBot({
 			//console.warn(res)
 		},
 		comment: (res) => {
-			const commentId = res.commentView.comment.id;
-			const originalComment = res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), console.warn);
+			const author = res.commentView.creator.name
+			console.log(author)
+			res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), console.warn);
 		},
 		mention: (res) => onMention(res)
 	}
@@ -36,17 +37,41 @@ const bot = new LemmyBot.LemmyBot({
 function checkForHaikus(res){
 	const text = res.commentView.comment.content;
 	const haiku = makeHaiku(text);
-	const community_id = res.commentView.community.id
-	const community_name = res.commentView.community.name
-	//console.log(community_name, community_id, res.commentView.community.actor_id)
-	if(haiku && subscribed.includes(community_id)){
-		console.log("detected haiku in subscribed", community_id)
+	if(!haiku){
+		return false;
 	}
+	console.log("is haiku")
+	const community_id = res.commentView.community.id
+	const community_name = res.commentView.community.name;
+	const postId = res.commentView.comment.post_id;
+	const parentId = res.commentView.comment.id;
+	
+	if(subscribed.includes(community_id)){
+		console.log("detected haiku in subscribed", community_id);
+		const newcomment = {
+			postId: postId,
+			parentId: parentId,
+			content: quoteFormat(haiku) + appendix
+		}
+		
+		console.log(quoteFormat(haiku), newcomment);
+		res.botActions.createComment(newcomment);
+		return true;
+	}
+	return false;
+}
+
+function quoteFormat(str){
+	let ret = ""
+	const lines = str.split("\n");
+	lines.forEach(line => {
+		ret += "> " + line + "\n> \n";
+	})
+	return ret.trim();
 }
 
 function onComment(res, originalComment){
-	console.log("subscribed:", subscribed);
-	
+	const text = res.commentView.comment.content;
 	if(originalComment.type == "comment" && originalComment.data.creator.id == LEMMY_USERID){
 		onAnswer(res, originalComment.data);
 	} else {
@@ -55,6 +80,7 @@ function onComment(res, originalComment){
 }
 
 function onMention(res){
+	console.log("mentioned!")
 	const community_id = res.mentionView.community.id;
 	const community_name = res.mentionView.community.name;
 	const text = res.mentionView.comment.content.toLowerCase();
@@ -64,6 +90,7 @@ function onMention(res){
 	
 	if(text.includes("opt in") && !text.includes("opt out")){
 		// opt in
+		console.log("opt in")
 		if(subscribed.includes(community_id)){
 			answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
 		} else {
@@ -72,6 +99,7 @@ function onMention(res){
 		}
 	} else if (!text.includes("opt in") && text.includes("opt out")){
 		// opt out
+		console.log("opt out")
 		if(subscribed.includes(community_id)){
 			let index = subscribed.indexOf(community_id);
 			if (index !== -1) {
@@ -83,13 +111,14 @@ function onMention(res){
 		}
 	} else {
 		// misunderstand
+		console.log("general mention")
 		answer = "Hello fellow Lemmings! I'm the *Haiku-bot*. I detect Haikus and format them in a nice way.\nAdd me in a community by mentioning me and writing `OPT IN`, or remove me from a community writing `OPT OUT`.";
 	}
 	
 	res.botActions.createComment({
 		postId: postId,
 		parentId: parentId,
-		content: answer + "\n\n-------\n\n" + appendix
+		content: answer + appendix
 	})
 	console.log(res)
 	console.log("mentioned by", res.mentionView.post.community_id)
