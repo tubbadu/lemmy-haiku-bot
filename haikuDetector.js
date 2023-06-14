@@ -1,9 +1,19 @@
 //const syllable = require('syllable');
-import {syllable} from "syllable"
+import {syllable} from "syllable";
+import removeMd from 'remove-markdown';
+
+function containsURL(str) {
+  const urlRegex = /(.*:\/\/|www\.)\S+/i;
+  return urlRegex.test(str);
+}
 
 function makeHaiku(str){
+	str = removeMd(str)
+	if(containsURL(str)){
+		return;
+	}
 	// TODO first format to remove unvisible text like hyperlinks
-	const words = str.replaceAll("\n", " ").split(" ");
+	const words = (str).replaceAll("\n", " ").split(" ");
 	let formattedHaiku = "";
 	let syllableCount = 0;
 	let line = 1;
