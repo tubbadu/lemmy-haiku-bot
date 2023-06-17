@@ -26,7 +26,7 @@ const bot = new LemmyBot.LemmyBot({
 		},
 		comment: (res) => {
 			if(res.commentView.creator.id != LEMMY_USERID){
-				res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), console.warn);
+				res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), error => console.warn(""));
 			} else {
 				console.log("not replying to my own comment because I'm not stupid eheh")
 			}

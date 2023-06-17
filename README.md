@@ -11,7 +11,7 @@ and to remove it from a community:
 ```
 !Haiku-bot UNSUBSCRIBE
 ```
-*(note: it is case-insensitive, `UnSuBsCrIbE` is also accepted)*
+*(note: it is case-insensitive, "`UnSuBsCrIbE`<img src="https://i.imgflip.com/3mqubx.png"  width="30" height="20">" is also accepted)*
 
 you can also reply to one of *Haiku-bot* comments and write `UNSUBSCRIBE`
 
