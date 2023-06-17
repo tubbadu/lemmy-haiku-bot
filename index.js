@@ -7,7 +7,7 @@ const LEMMY_PASSWORD = process.env.LEMMY_PASSWORD;
 const LEMMY_INSTANCE = process.env.LEMMY_INSTANCE;
 const LEMMY_USERID = 37535;
 
-const appendix = "\n\n-----------\n\n::: spoiler I'm a bot beep boop.\nI detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.world/u/tubbadu) and tell him he's an idiot. Source code and more info [here](https://github.com/tubbadu/lemmy-haiku-bot). For any suggestion feel free to contact me!\n:::";
+const appendix = "\n\n-----------\n\n::: spoiler I'm a bot beep boop.\nI detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.world/u/tubbadu) and tell him he's an idiot. Source code and more info [here](https://github.com/tubbadu/lemmy-haiku-bot). For any info or suggestion feel free to contact me!\n:::";
 //"\n\n--------------\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~" // ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~
 //"~I'm a bot beep boop. I detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.one/u/tubbadu) and tell him he's an idiot. Answer `REMOVE` to this comment and I will delete it imediately.~".replaceAll(" ", "~ ~");
 

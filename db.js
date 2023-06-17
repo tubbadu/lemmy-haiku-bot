@@ -36,23 +36,23 @@ function subscribe(community_id, callbackSuccess, callbackFail) {
 }
 
 function unsubscribe(community_id, callbackSuccess, callbackFail) {
-const query = `DELETE FROM subscribed
-	WHERE community_id = ?`;
+	const query = `DELETE FROM subscribed
+		WHERE community_id = ?`;
 
-db.run(query, community_id, function (err) {
-	if (err) {
-	console.error(err);
-	return;
-	}
+	db.run(query, community_id, function (err) {
+		if (err) {
+		console.error(err);
+		return;
+		}
 
-	if (this.changes > 0) {
-	console.log(`Value ${community_id} removed from the database.`);
-	if(callbackSuccess) callbackSuccess(community_id);
-	} else {
-	console.log(`Value ${community_id} is not present in the database.`);
-	if(callbackFail) callbackFail(community_id);
-	}
-});
+		if (this.changes > 0) {
+		console.log(`Value ${community_id} removed from the database.`);
+		if(callbackSuccess) callbackSuccess(community_id);
+		} else {
+		console.log(`Value ${community_id} is not present in the database.`);
+		if(callbackFail) callbackFail(community_id);
+		}
+	});
 }
 
 function db_init(){
@@ -60,6 +60,10 @@ function db_init(){
 		community_id int,
 		PRIMARY KEY(community_id)
 	)`);
+}
+
+function db_close(){
+	db.close();
 }
 
 let db = new sqlite3.Database('./data.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -75,7 +79,19 @@ const Db = {
 	init: db_init,
 	subscribe: subscribe,
 	unsubscribe: unsubscribe,
-	ifSubscribed: ifSubscribed
+	ifSubscribed: ifSubscribed,
+	close: db_close
 }
 
 export default Db
+
+
+process.on('SIGINT', () => {
+  // Custom code to execute before closing
+  console.log('\nReceived SIGINT signal. Cleaning up...');
+  db.close();
+  // Perform any necessary cleanup tasks, save state, etc.
+  
+  // Exit the process
+  process.exit(0);
+});
