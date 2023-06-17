@@ -85,7 +85,7 @@ function unsubscribe(res, text, postId, commentId, community_id){
 	console.log("unsubscribe")
 	Db.unsubscribe(community_id, (community_id) => {
 		// success
-		let answer = "*Haiku-bot* has been removed from this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
+		let answer = "*Haiku-bot* has been removed from this community. Mention me or respond to any of my comments and write `SUBSCRIBE` to add me in this community.";
 		res.botActions.createComment({
 			postId: postId,
 			parentId: commentId,
@@ -94,7 +94,7 @@ function unsubscribe(res, text, postId, commentId, community_id){
 		res.preventReprocess();
 	}, (community_id) => {
 		// fail
-		let answer = "*Haiku-bot* is currently not watching this community. Mention me or respond to any of my comments and write `OPT IN` to add me in this community.";
+		let answer = "*Haiku-bot* is currently not watching this community. Mention me or respond to any of my comments and write `SUBSCRIBE` to add me in this community.";
 		res.botActions.createComment({
 			postId: postId,
 			parentId: commentId,
@@ -108,7 +108,7 @@ function subscribe(res, text, postId, commentId, community_id){
 	console.log("subscribe")
 	Db.subscribe(community_id, (community_id) => {
 		// success
-		let answer = "*Haiku-bot* has been successfully added to this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
+		let answer = "*Haiku-bot* has been successfully added to this community. Mention me or respond to any of my comments and write `UNSUBSCRIBE` to unsubscribe.";
 		res.botActions.createComment({
 			postId: postId,
 			parentId: commentId,
@@ -117,7 +117,7 @@ function subscribe(res, text, postId, commentId, community_id){
 		res.preventReprocess();
 	}, (community_id) => {
 		// fail
-		let answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `OPT OUT` to opt out.";
+		let answer = "*Haiku-bot* is already watching this community. Mention me or respond to any of my comments and write `UNSUBSCRIBE` to unsubscribe.";
 		res.botActions.createComment({
 			postId: postId,
 			parentId: commentId,
