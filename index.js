@@ -5,7 +5,6 @@ import LemmyBot from 'lemmy-bot';
 const LEMMY_USERNAME = process.env.LEMMY_USERNAME;
 const LEMMY_PASSWORD = process.env.LEMMY_PASSWORD;
 const LEMMY_INSTANCE = process.env.LEMMY_INSTANCE;
-const LEMMY_USERID = 37535;
 
 const appendix = "\n\n-----------\n\n::: spoiler I'm a bot beep boop.\nI detect Haikus and format them in a nice way. If I make any mistake please contact [my creator](https://lemmy.world/u/tubbadu) and tell him he's an idiot. Source code and more info [here](https://github.com/tubbadu/lemmy-haiku-bot). For any info or suggestion feel free to contact me!\n:::";
 //"\n\n--------------\n\n~I'm~ ~a~ ~bot~ ~beep~ ~boop.~ ~I~ ~detect~ ~Haikus~ ~and~ ~format~ ~them~ ~in~ ~a~ ~nice~ ~way.~ ~If~ ~I~ ~make~ ~any~ ~mistake~ ~please~ ~contact~ [~my~ ~creator~](https://lemmy.one/u/tubbadu) ~and~ ~tell~ ~him~ ~he's~ ~an~ ~idiot.~" // ~Answer~ ~`REMOVE`~ ~to~ ~this~ ~comment~ ~and~ ~I~ ~will~ ~delete~ ~it~ ~imediately.~
@@ -25,7 +24,7 @@ const bot = new LemmyBot.LemmyBot({
 			
 		},
 		comment: (res) => {
-			if(res.commentView.creator.id != LEMMY_USERID){
+			if(res.commentView.creator.name != LEMMY_USERNAME){
 				res.botActions.getParentOfComment(res.commentView.comment).then(parent => onComment(res, parent), error => console.warn(""));
 			} else {
 				console.log("not replying to my own comment because I'm not stupid eheh")
@@ -139,7 +138,7 @@ function quoteFormat(str, author){
 
 function onComment(res, originalComment){
 	const text = res.commentView.comment.content.toLowerCase();
-	if(originalComment.type == "comment" && originalComment.data.creator.id == LEMMY_USERID){
+	if(originalComment.type == "comment" && originalComment.data.creator.name == LEMMY_USERNAME){
 		onAnswer(res, originalComment.data);
 	} else if(text.includes("!haiku-bot") || text.includes("!haikubot") || text.includes("!haiku bot")){
 		onMentionAlias(res)
