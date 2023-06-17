@@ -62,9 +62,9 @@ function checkForHaikus(res){
 
 function parse(res, text, postId, commentId, community_id){
 	if(text.includes("unsubscribe")){
-		unsubscribe(res, community_id);
+		unsubscribe(res, text, postId, commentId, community_id);
 	} else if (text.includes("subscribe")){
-		subscribe(res, community_id);
+		subscribe(res, text, postId, commentId, community_id);
 	} else {
 		answerGeneralDescription(res)
 	}
