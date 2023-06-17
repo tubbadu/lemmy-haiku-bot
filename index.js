@@ -138,9 +138,11 @@ function quoteFormat(str, author){
 }
 
 function onComment(res, originalComment){
-	const text = res.commentView.comment.content;
+	const text = res.commentView.comment.content.toLowerCase();
 	if(originalComment.type == "comment" && originalComment.data.creator.id == LEMMY_USERID){
 		onAnswer(res, originalComment.data);
+	} else if(text.includes("!haiku-bot") || text.includes("!haikubot") || text.includes("!haiku bot")){
+		onMentionAlias(res)
 	} else {
 		checkForHaikus(res);
 	}
@@ -158,8 +160,19 @@ function onMention(res){
 	console.log("mentioned by", res.mentionView.post.community_id)
 }
 
-function onAnswer(res, originalComment){
+function onMentionAlias(res){
+	console.log("alias-mentioned!")
+	const community_id = res.commentView.community.id;
+	const community_name = res.commentView.community.name;
+	const text = res.commentView.comment.content.toLowerCase();
+	const postId = res.commentView.comment.post_id;
+	const commentId = res.commentView.comment.id;
 	
+	parse(res, text, postId, commentId, community_id);
+	console.log("mentioned by", res.commentView.post.community_id)
+}
+
+function onAnswer(res, originalComment){
 	const community_id = res.commentView.community.id;
 	const community_name = res.commentView.community.name;
 	const text = res.commentView.comment.content.toLowerCase();
